@@ -1,5 +1,7 @@
 package uk.kamchatka.fpis
 
+import uk.kamchatka.fpis.Monoid.compositionMonoid
+
 import scala.annotation.tailrec
 
 
@@ -29,14 +31,8 @@ object List {
   def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
     List.foldLeft(as, m.zero)((b, a) => m.op(b, f(a)))
 
-  def foldLeft2[A, B](as: List[A], z: B)(f: (B, A) => B): B = {
-    val m: Monoid[B => B] = new Monoid[B => B] {
-      override def zero: B => B = identity
-
-      override def op(a: B => B, b: B => B): B => B = a andThen b
-    }
-    foldMap(as, m)(a => (b: B) => f(b, a))(z)
-  }
+  def foldLeft2[A, B](as: List[A], z: B)(f: (B, A) => B): B =
+    foldMap(as, compositionMonoid[B])(a => (b: B) => f(b, a))(z)
 
   def foldLeft[A, B](as: List[A], z: B)(f: (B, A) => B): B = {
     @tailrec
