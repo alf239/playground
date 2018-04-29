@@ -25,6 +25,19 @@ object List {
 
   def product1[A](as: List[A])(implicit ev: Numeric[A]): A = foldLeft(as, ev.one)(ev.times)
 
+
+  def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
+    List.foldLeft(as, m.zero)((b, a) => m.op(b, f(a)))
+
+  def foldLeft2[A, B](as: List[A], z: B)(f: (B, A) => B): B = {
+    val m: Monoid[B => B] = new Monoid[B => B] {
+      override def zero: B => B = identity
+
+      override def op(a: B => B, b: B => B): B => B = a andThen b
+    }
+    foldMap(as, m)(a => (b: B) => f(b, a))(z)
+  }
+
   def foldLeft[A, B](as: List[A], z: B)(f: (B, A) => B): B = {
     @tailrec
     def fold(acc: B, xs: List[A]): B = xs match {
