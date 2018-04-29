@@ -8,6 +8,7 @@ class Chapter01Test extends FunSpec with PropertyChecks {
 
   def id[A]: A => A = Chapter01.identity[A]
 
+  // 3. Write a program that tries to test that your composition function respects identity
   describe("compose") {
     it("should respect identity") {
       forAll { (a: Long, f: Long => Double) =>
