@@ -29,7 +29,7 @@ class Chapter02Test extends FunSpec with PropertyChecks {
 
   describe("isSorted") {
     it("is true for 1,2,3,4,5,6,7,8,9") {
-      assert(isSorted[Int]((1 to 10).toArray, _ <= _))
+      assert(isSorted[Int]((1 to 9).toArray, _ <= _))
     }
     it("is false for 1,3,2") {
       assert(!isSorted[Int](Array(1, 3, 2), _ <= _))
