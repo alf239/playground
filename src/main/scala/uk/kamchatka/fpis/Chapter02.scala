@@ -15,4 +15,8 @@ object Chapter02 {
 
   def isSorted[A](as: Array[A], ordered: (A, A) => Boolean): Boolean =
     as.isEmpty || ((as, as.tail).zipped forall ordered)
+
+  def curry[A, B, C](f: (A, B) => C): A => B => C = a => f(a, _)
+
+  def uncurry[A, B, C](f: A => B => C): (A, B) => C = (a, b) => f(a)(b)
 }

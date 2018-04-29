@@ -2,7 +2,7 @@ package uk.kamchatka.fpis
 
 import org.scalatest.FunSpec
 import org.scalatest.prop.PropertyChecks
-import uk.kamchatka.fpis.Chapter02.{fibonacci, isSorted}
+import uk.kamchatka.fpis.Chapter02._
 
 class Chapter02Test extends FunSpec with PropertyChecks {
   describe("Fibonacci") {
@@ -31,7 +31,7 @@ class Chapter02Test extends FunSpec with PropertyChecks {
     it("is true for 1,2,3,4,5,6,7,8,9") {
       assert(isSorted[Int]((1 to 10).toArray, _ <= _))
     }
-    it("is falsefor 1,3,2") {
+    it("is false for 1,3,2") {
       assert(!isSorted[Int](Array(1, 3, 2), _ <= _))
     }
     it("is true for a single element") {
@@ -45,6 +45,22 @@ class Chapter02Test extends FunSpec with PropertyChecks {
         val sorted = as.sorted
         assert(isSorted[Int](sorted, _ <= _))
         assert(isSorted[Int](as, _ <= _) === (as sameElements sorted))
+      }
+    }
+  }
+
+  describe("currying") {
+    it("preserves the function") {
+      forAll { (f: (Int, Int) => Int, x: Int, y: Int) =>
+        assert(f(x, y) === curry(f)(x)(y))
+      }
+    }
+  }
+
+  describe("uncurrying") {
+    it("preserves the function") {
+      forAll { (f: Int => Int => Int, x: Int, y: Int) =>
+        assert(f(x)(y) === uncurry(f)(x, y))
       }
     }
   }
