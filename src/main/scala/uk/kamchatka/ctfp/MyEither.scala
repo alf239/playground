@@ -1,4 +1,4 @@
-package uk.kamchatka.cat
+package uk.kamchatka.ctfp
 
 sealed trait MyEither[T]
 

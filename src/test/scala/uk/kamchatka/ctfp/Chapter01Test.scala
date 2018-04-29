@@ -1,4 +1,4 @@
-package uk.kamchatka.cat
+package uk.kamchatka.ctfp
 
 import org.scalatest.FunSpec
 import org.scalatest.prop.PropertyChecks

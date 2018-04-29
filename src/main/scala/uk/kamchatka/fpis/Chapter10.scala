@@ -1,4 +1,4 @@
-package uk.kamchatka.fpinscala
+package uk.kamchatka.fpis
 
 import scala.language.higherKinds
 

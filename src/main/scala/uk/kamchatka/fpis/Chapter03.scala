@@ -1,8 +1,8 @@
-package uk.kamchatka.fpinscala
+package uk.kamchatka.fpis
 
 import scala.annotation.tailrec
 
-object Chapter3 extends App {
+object Chapter03 extends App {
   def foldLeft[A, B](as: List[A], z: B)(f: (B, A) => B): B = {
     @tailrec
     def fold(acc: B, xs: List[A]): B = xs match {

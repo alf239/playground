@@ -1,4 +1,4 @@
-package uk.kamchatka.cat
+package uk.kamchatka.ctfp
 
 object Chapter01 {
   /** 1. Implement, as best as you can, the identity function in your favorite
