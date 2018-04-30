@@ -42,10 +42,7 @@ object Option {
   def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] =
     for (x <- a; y <- b) yield f(x, y)
 
-  def sequence[A](as: List[Option[A]]): Option[List[A]] = as match {
-    case Nil => Some(Nil)
-    case Cons(x, xs) => for (ot <- sequence(xs); oh <- x) yield Cons(oh, ot)
-  }
+  def sequence[A](as: List[Option[A]]): Option[List[A]] = traverse(as)(identity)
 
   def traverse[A, B](as: List[A])(f: A => Option[B]): Option[List[B]] = as match {
     case Nil => Some(Nil)
