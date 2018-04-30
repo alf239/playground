@@ -61,6 +61,16 @@ sealed trait Stream[+A] {
       case _ => None
     }
 
+  def startsWith[B >: A](bs: Stream[B]): Boolean =
+    zipWith(bs)(_ == _).forAll(identity)
+
+  def tails: Stream[Stream[A]] =
+    unfold(Some(this): Option[Stream[A]]) {
+      case Some(as@Cons(_, t)) => Some((as, Some(t())))
+      case Some(Empty) => Some((Empty, None))
+      case _ => None
+    }
+
   def headOption: Option[A] =
     foldRight(None: Option[A])((a, _) => Some(a))
 
@@ -123,23 +133,6 @@ object Stream {
   def length[A](as: Stream[A]): Int = foldLeft(as, 1)((a, _) => a + 1)
 
   def reverse[A](as: Stream[A]): Stream[A] = foldLeft[A, Stream[A]](as, Empty)((as, a) => cons(a, as))
-
-  def zipWith[A, B, C](as: Stream[A], bs: Stream[B])(f: (A, B) => C): Stream[C] = (as, bs) match {
-    case (Empty, _) => Empty
-    case (_, Empty) => Empty
-    case (Cons(h1, t1), Cons(h2, t2)) => cons(f(h1(), h2()), zipWith(t1(), t2())(f))
-  }
-
-  @tailrec
-  def startsWith[A](a: Stream[A], b: Stream[A]): Boolean = (a, b) match {
-    case (_, Empty) => true
-    case (Cons(ah, at), Cons(bh, bt)) => ah() == bh() && startsWith(at(), bt())
-    case _ => false
-  }
-
-  @tailrec
-  def hasSubsequence[A](a: Stream[A], b: Stream[A]): Boolean =
-    startsWith(a, b) || (a != Empty && hasSubsequence(tail(a), b))
 
   def tail[A](xs: Stream[A]): Stream[A] = xs match {
     case Empty => sys.error("tail of an empty Stream")
