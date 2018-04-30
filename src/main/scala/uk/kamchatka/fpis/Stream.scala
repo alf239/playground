@@ -1,7 +1,7 @@
 package uk.kamchatka.fpis
 
 import uk.kamchatka.fpis.Monoid.compositionMonoid
-import uk.kamchatka.fpis.Stream.{Cons, Empty, cons, empty}
+import uk.kamchatka.fpis.Stream._
 
 import scala.annotation.tailrec
 
@@ -13,7 +13,10 @@ sealed trait Stream[+A] {
   }
 
   def map[B](f: A => B): Stream[B] =
-    foldRight[Stream[B]](empty)((a, bs) => cons(f(a), bs))
+    unfold(this) {
+      case Cons(h, t) => Some(f(h()), t())
+      case _ => None
+    }
 
   def filter(f: A => Boolean): Stream[A] =
     foldRight[Stream[A]](empty)((a, acc) => if (f(a)) cons(a, acc) else acc)
@@ -30,13 +33,33 @@ sealed trait Stream[+A] {
   def forAll(p: A => Boolean): Boolean =
     foldRight(true)((a, b) => p(a) && b)
 
-  def take(n: Int): Stream[A] = this match {
-    case Cons(h, t) if n > 0 => Cons(h, () => t().take(n - 1))
-    case _ => Empty
-  }
+  def take(n: Int): Stream[A] =
+    unfold((this, n)) {
+      case (Cons(h, t), nn) if nn > 0 => Some(h(), (t(), nn - 1))
+      case _ => None
+    }
 
   def takeWhile(p: A => Boolean): Stream[A] =
-    foldRight(empty[A])((a, b) => if (p(a)) cons(a, b) else empty)
+    unfold(this) {
+      case Cons(h, t) =>
+        val head = h()
+        if (p(head)) Some((head, t())) else None
+      case _ => None
+    }
+
+  def zipWith[B, C](bs: Stream[B])(f: (A, B) => C): Stream[C] =
+    unfold((this, bs)) {
+      case (Cons(ha, ta), Cons(hb, tb)) => Some((f(ha(), hb()), (ta(), tb())))
+      case _ => None
+    }
+
+  def zipAll[B](bs: Stream[B]): Stream[(Option[A], Option[B])] =
+    unfold((this, bs)) {
+      case (Cons(ha, ta), Cons(hb, tb)) => Some(((Some(ha()), Some(hb())), (ta(), tb())))
+      case (Cons(ha, ta), Empty) => Some((Some(ha()), None), (ta(), Empty))
+      case (Empty, Cons(hb, tb)) => Some(((None, Some(hb())), (Empty, tb())))
+      case _ => None
+    }
 
   def headOption: Option[A] =
     foldRight(None: Option[A])((a, _) => Some(a))
@@ -49,9 +72,9 @@ sealed trait Stream[+A] {
 
 object Stream {
 
-  case object Empty extends Stream[Nothing]
+  private case object Empty extends Stream[Nothing]
 
-  case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
+  private case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
 
   def cons[A](head: => A, tail: => Stream[A]): Stream[A] = {
     lazy val h = head
