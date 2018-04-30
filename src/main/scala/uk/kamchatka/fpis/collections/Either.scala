@@ -1,4 +1,4 @@
-package uk.kamchatka.fpis
+package uk.kamchatka.fpis.collections
 
 trait Either[+E, +A] {
   def map[B](f: A => B): Either[E, B]

@@ -1,4 +1,4 @@
-package uk.kamchatka.fpis
+package uk.kamchatka.fpis.collections
 
 trait Option[+A] {
   def map[B](f: A => B): Option[B]

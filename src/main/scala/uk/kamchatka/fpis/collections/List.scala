@@ -1,5 +1,6 @@
-package uk.kamchatka.fpis
+package uk.kamchatka.fpis.collections
 
+import uk.kamchatka.fpis.Monoid
 import uk.kamchatka.fpis.Monoid.compositionMonoid
 
 import scala.annotation.tailrec

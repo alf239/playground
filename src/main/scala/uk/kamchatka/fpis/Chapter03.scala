@@ -1,6 +1,8 @@
 package uk.kamchatka.fpis
 
-import uk.kamchatka.fpis.List._
+import uk.kamchatka.fpis.collections.List._
+import uk.kamchatka.fpis.collections.List
+import uk.kamchatka.fpis.collections.Nil
 
 object Chapter03 extends App {
   println(foldLeft(Nil, 0)((_, _) => ???))
