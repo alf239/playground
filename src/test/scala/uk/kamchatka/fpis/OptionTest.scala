@@ -4,7 +4,7 @@ import org.scalatest.FunSpec
 import org.scalatest.prop.PropertyChecks
 import uk.kamchatka.fpis.Option.{sequence, traverse}
 
-class Chapter04Test extends FunSpec with PropertyChecks {
+class OptionTest extends FunSpec with PropertyChecks {
   describe("None") {
     val none = Option.none[Long]
     it("maps to None") {

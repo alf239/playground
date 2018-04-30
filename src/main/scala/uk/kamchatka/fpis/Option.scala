@@ -7,7 +7,7 @@ trait Option[+A] {
 
   def getOrElse[B >: A](default: => B): B
 
-  def orElse[B >: A](ob: Option[B]): Option[B]
+  def orElse[B >: A](ob: => Option[B]): Option[B]
 
   def filter(p: A => Boolean): Option[A]
 }
@@ -19,7 +19,7 @@ case object None extends Option[Nothing] {
 
   override def getOrElse[B >: Nothing](default: => B): B = default
 
-  override def orElse[B >: Nothing](ob: Option[B]): Option[B] = ob
+  override def orElse[B >: Nothing](ob: => Option[B]): Option[B] = ob
 
   override def filter(p: Nothing => Boolean): Option[Nothing] = None
 }
@@ -31,7 +31,7 @@ case class Some[+A](a: A) extends Option[A] {
 
   override def getOrElse[B >: A](default: => B): B = a
 
-  override def orElse[B >: A](ob: Option[B]): Option[B] = this
+  override def orElse[B >: A](ob: => Option[B]): Option[B] = this
 
   override def filter(p: A => Boolean): Option[A] = if (p(a)) this else None
 }
