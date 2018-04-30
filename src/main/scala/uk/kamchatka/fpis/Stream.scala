@@ -65,6 +65,21 @@ object Stream {
     if (as.isEmpty) empty
     else cons(as.head, apply(as.tail: _*))
 
+  def constant[A](a: A): Stream[A] = cons(a, constant(a))
+
+  def from(n: Int): Stream[Int] = cons(n, from(n + 1))
+
+  def fibs: Stream[Long] = {
+    def fib1(current: Long, next: Long): Stream[Long] = cons(current, fib1(next, current + next))
+
+    fib1(0, 1)
+  }
+
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] =
+    f(z).map {
+      case (a, zz) => cons(a, unfold(zz)(f))
+    } getOrElse empty
+
   def foldMap[A, B](as: Stream[A], m: Monoid[B])(f: A => B): B =
     Stream.foldLeft(as, m.zero)((b, a) => m.op(b, f(a)))
 
