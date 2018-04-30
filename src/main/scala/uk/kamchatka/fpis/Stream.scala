@@ -1,49 +1,58 @@
 package uk.kamchatka.fpis
 
 import uk.kamchatka.fpis.Monoid.compositionMonoid
+import uk.kamchatka.fpis.Stream.{Cons, Empty, cons, empty}
 
 import scala.annotation.tailrec
 
 sealed trait Stream[+A] {
-  def toList: List[A]
-
-  def take(n: Int): Stream[A]
-
-  def takeWhile(p: A => Boolean): Stream[A]
 
   def foldRight[B](z: => B)(f: (A, => B) => B): B = this match {
     case Cons(h, t) => f(h(), t().foldRight(z)(f))
     case _ => z
   }
 
-  def exists(p: A => Boolean): Boolean = foldRight(false)((a, b) => p(a) || b)
+  def map[B](f: A => B): Stream[B] =
+    foldRight[Stream[B]](empty)((a, bs) => cons(f(a), bs))
 
-  def forAll(p: A => Boolean): Boolean = foldRight(true)((a, b) => p(a) && b)
-}
+  def filter(f: A => Boolean): Stream[A] =
+    foldRight[Stream[A]](empty)((a, acc) => if (f(a)) cons(a, acc) else acc)
 
-case object Empty extends Stream[Nothing] {
-  override def toList: List[Nothing] = Nil
+  def append[B >: A](b: => Stream[B]): Stream[B] =
+    foldRight(b)(cons(_, _))
 
-  override def take(n: Int): Stream[Nothing] = Empty
+  def flatMap[B](f: A => Stream[B]): Stream[B] =
+    foldRight[Stream[B]](Empty)(f(_).append(_))
 
-  override def takeWhile(p: Nothing => Boolean): Stream[Nothing] = Empty
-}
+  def exists(p: A => Boolean): Boolean =
+    foldRight(false)((a, b) => p(a) || b)
 
-case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A] {
-  override def toList: List[A] = h() :: t().toList
+  def forAll(p: A => Boolean): Boolean =
+    foldRight(true)((a, b) => p(a) && b)
 
-  override def take(n: Int): Stream[A] =
-    if (n <= 0) Empty
-    else Cons(h, () => t().take(n - 1))
+  def take(n: Int): Stream[A] = this match {
+    case Cons(h, t) if n > 0 => Cons(h, () => t().take(n - 1))
+    case _ => Empty
+  }
 
-  override def takeWhile(p: A => Boolean): Stream[A] = {
-    lazy val head = h()
-    if (p(head)) Cons(() => head, () => t().takeWhile(p))
-    else Empty
+  def takeWhile(p: A => Boolean): Stream[A] =
+    foldRight(empty[A])((a, b) => if (p(a)) cons(a, b) else empty)
+
+  def headOption: Option[A] =
+    foldRight(None: Option[A])((a, _) => Some(a))
+
+  def toList: List[A] = this match {
+    case Cons(h, t) => h() :: t().toList
+    case _ => Nil
   }
 }
 
 object Stream {
+
+  case object Empty extends Stream[Nothing]
+
+  case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
+
   def cons[A](head: => A, tail: => Stream[A]): Stream[A] = {
     lazy val h = head
     lazy val t = tail
@@ -77,21 +86,6 @@ object Stream {
   def length[A](as: Stream[A]): Int = foldLeft(as, 1)((a, _) => a + 1)
 
   def reverse[A](as: Stream[A]): Stream[A] = foldLeft[A, Stream[A]](as, Empty)((as, a) => cons(a, as))
-
-  def append[A](a: Stream[A], b: => Stream[A]): Stream[A] = a.foldRight(b)(cons(_, _))
-
-  def flatten[A](ass: Stream[Stream[A]]): Stream[A] = ass.foldRight[Stream[A]](empty)(append)
-
-  def map[A, B](as: Stream[A])(f: A => B): Stream[B] = as.foldRight[Stream[B]](empty)((a, bs) => cons(f(a), bs))
-
-  def filter[A](as: Stream[A])(f: A => Boolean): Stream[A] =
-    as.foldRight[Stream[A]](empty)((a, acc) => if (f(a)) cons(a, acc) else acc)
-
-  def filter2[A](as: Stream[A])(f: A => Boolean): Stream[A] =
-    flatMap(as)(a => if (f(a)) Stream(a) else Empty)
-
-  def flatMap[A, B](as: Stream[A])(f: A => Stream[B]): Stream[B] =
-    as.foldRight[Stream[B]](Empty)((a, bs) => append(f(a), bs))
 
   def zipWith[A, B, C](as: Stream[A], bs: Stream[B])(f: (A, B) => C): Stream[C] = (as, bs) match {
     case (Empty, _) => Empty
