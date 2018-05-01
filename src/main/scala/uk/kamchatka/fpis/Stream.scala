@@ -71,6 +71,13 @@ sealed trait Stream[+A] {
       case _ => None
     }
 
+  def scanRight[B](z: => B)(f: (A, => B) => B): Stream[B] = this match {
+    case Empty => cons(z, Empty)
+    case Cons(h, t) =>
+      lazy val bs@Cons(hh, _) = t().scanRight(z)(f)
+      cons(f(h(), hh()), bs)
+  }
+
   def headOption: Option[A] =
     foldRight(None: Option[A])((a, _) => Some(a))
 
