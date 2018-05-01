@@ -26,12 +26,7 @@ trait RNG {
     }(this)
 
   def ints(n: Int): (List[Int], RNG) =
-    if (n <= 0) (Nil, this)
-    else {
-      val (m0, rng0) = this.nextInt
-      val (ms, rng1) = rng0.ints(n - 1)
-      (m0 :: ms, rng1)
-    }
+    sequence(List.fill(n)(int))(this)
 }
 
 case class SimpleRNG(seed: Long) extends RNG {
@@ -60,6 +55,13 @@ object RNG {
       val (a, rng0) = ra(rng)
       val (b, rng1) = rb(rng0)
       (f(a, b), rng1)
+    }
+
+  def sequence[A](rs: List[Rand[A]]): Rand[List[A]] =
+    rng => rs.foldRight((Nil: List[A], rng)) {
+      case (s, (as, rng1)) =>
+        val (a, rng2) = s(rng1)
+        (a :: as, rng2)
     }
 
   def both[A, B](ra: Rand[A], rb: Rand[B]): Rand[(A, B)] =
