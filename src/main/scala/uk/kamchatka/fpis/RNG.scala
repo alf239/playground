@@ -29,11 +29,11 @@ trait RNG {
   def ints(n: Int): (List[Int], RNG) =
     sequence(List.fill(n)(int)).run(this)
 
-  def nonNegativeLessTnan(n: Int): Rand[Int] =
+  def nonNegativeLessThan(n: Int): Rand[Int] =
     int flatMap { i =>
       val mod = i % n
       if (i + (n - 1) - mod >= 0) unit(mod)
-      else nonNegativeLessTnan(n)
+      else nonNegativeLessThan(n)
     }
 }
 
