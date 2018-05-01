@@ -1,5 +1,6 @@
 package uk.kamchatka.fpis
 
+import uk.kamchatka.fpis.Chapter02.uncurry
 import uk.kamchatka.fpis.RNG._
 
 trait RNG {
@@ -27,6 +28,13 @@ trait RNG {
 
   def ints(n: Int): (List[Int], RNG) =
     sequence(List.fill(n)(int))(this)
+
+  def nonNegativeLessTnan(n: Int): Rand[Int] =
+    flatMap(int) { i =>
+      val mod = i % n
+      if (i + (n - 1) - mod >= 0) unit(mod)
+      else nonNegativeLessTnan(n)
+    }
 }
 
 case class SimpleRNG(seed: Long) extends RNG {
@@ -56,6 +64,9 @@ object RNG {
       val (b, rng1) = rb(rng0)
       (f(a, b), rng1)
     }
+
+  def flatMap[A, B](ra: Rand[A])(f: A => Rand[B]): Rand[B] =
+    rng => uncurry(f).tupled(ra(rng))
 
   def sequence[A](rs: List[Rand[A]]): Rand[List[A]] =
     rng => rs.foldRight((Nil: List[A], rng)) {
