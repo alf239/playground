@@ -5,33 +5,25 @@ import uk.kamchatka.fpis.RNG._
 trait RNG {
   def nextInt: (Int, RNG)
 
-  def nonNegativeInt: (Int, RNG) = {
-    val (n, rng) = nextInt
-    (nonNegative(n), rng)
-  }
+  val int: Rand[Int] = _.nextInt
+  val double: Rand[Double] = map(int)(toDouble)
 
-  def nextDouble: (Double, RNG) = {
-    val (n, rng) = nextInt
-    (toDouble(n), rng)
-  }
+  def nonNegativeInt: (Int, RNG) =
+    map(int)(nonNegative)(this)
 
-  def intDouble: ((Int, Double), RNG) = {
-    val (n, rng0) = this.nextInt
-    val (d, rng1) = rng0.nextDouble
-    ((n, d), rng1)
-  }
+  def nextDouble: (Double, RNG) =
+    double(this)
 
-  def doubleInt: ((Double, Int), RNG) = {
-    val ((n, d), rng) = intDouble
-    ((d, n), rng)
-  }
+  def intDouble: ((Int, Double), RNG) =
+    both(int, double)(this)
 
-  def double3: ((Double, Double, Double), RNG) = {
-    val (d0, rng0) = this.nextDouble
-    val (d1, rng1) = rng0.nextDouble
-    val (d2, rng2) = rng1.nextDouble
-    ((d0, d1, d2), rng2)
-  }
+  def doubleInt: ((Double, Int), RNG) =
+    both(double, int)(this)
+
+  def double3: ((Double, Double, Double), RNG) =
+    map(both(double, both(double, double))) {
+      case (d0, (d1, d2)) => (d0, d1, d2)
+    }(this)
 
   def ints(n: Int): (List[Int], RNG) =
     if (n <= 0) (Nil, this)
@@ -63,6 +55,15 @@ object RNG {
       (f(a), rng2)
     }
 
+  def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    rng => {
+      val (a, rng0) = ra(rng)
+      val (b, rng1) = rb(rng0)
+      (f(a, b), rng1)
+    }
+
+  def both[A, B](ra: Rand[A], rb: Rand[B]): Rand[(A, B)] =
+    map2(ra, rb)((_, _))
 
   def nonNegative(n: Int): Int = if (n >= 0) n else ~n
 
