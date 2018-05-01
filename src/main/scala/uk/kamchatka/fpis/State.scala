@@ -32,11 +32,9 @@ object State {
     } yield ()
 
   def sequence[S, A](rs: List[State[S, A]]): State[S, List[A]] =
-    State(s => rs.foldRight((Nil: List[A], s)) {
-      case (st, (as, s0)) =>
-        val (a, s1) = st.run(s0)
-        (a :: as, s1)
-    })
+    rs.foldRight[State[S, List[A]]](unit(Nil)) {
+      case (st, acc) => st.flatMap(a => acc.map(as => a :: as))
+    }
 
   def both[S, A, B](sa: State[S, A], sb: State[S, B]): State[S, (A, B)] =
     sa.map2(sb)((_, _))
