@@ -1,6 +1,6 @@
 package uk.kamchatka.fpis
 
-import java.util.concurrent.{ExecutorService, Future, TimeUnit, TimeoutException}
+import java.util.concurrent.{ExecutorService, Future, TimeUnit}
 
 object Par {
 
@@ -40,12 +40,10 @@ object Par {
     override def isDone: Boolean = af.isDone && bf.isDone
 
     override def get(timeout: Long, unit: TimeUnit): C = {
-      val timeBudget = unit.toNanos(timeout)
       val t = System.nanoTime()
       val a = af.get(timeout, unit)
       val elapsed = System.nanoTime() - t
-      val remaining = timeBudget - elapsed
-      if (remaining <= 0) throw new TimeoutException(s"$remaining nanos left")
+      val remaining = Math.max(unit.toNanos(timeout) - elapsed, 0)
       val b = bf.get(remaining, TimeUnit.NANOSECONDS)
       f(a, b)
     }

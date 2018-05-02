@@ -1,6 +1,6 @@
 package uk.kamchatka.fpis
 
-import java.util.concurrent.Executors
+import java.util.concurrent.{Executors, TimeUnit}
 
 import uk.kamchatka.fpis.Par.Par
 
@@ -14,5 +14,5 @@ object Chapter07 extends App {
     }
   }
 
-  println(sum(1 to 100)(Executors.newFixedThreadPool(1000)).get())
+  println(sum(1 to 100)(Executors.newFixedThreadPool(1000)).get(125, TimeUnit.MILLISECONDS))
 }
