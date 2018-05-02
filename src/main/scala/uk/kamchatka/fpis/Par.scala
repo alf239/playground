@@ -1,6 +1,6 @@
 package uk.kamchatka.fpis
 
-import java.util.concurrent.{ExecutorService, Future, TimeUnit}
+import java.util.concurrent.{ExecutorService, Future, TimeUnit, TimeoutException}
 
 object Par {
 
@@ -12,7 +12,7 @@ object Par {
     es => {
       val af = a(es)
       val bf = b(es)
-      UnitFuture(f(af.get, bf.get))
+      Map2Future(af, bf, f)
     }
 
   def fork[A](a: => Par[A]): Par[A] =
@@ -30,6 +30,27 @@ object Par {
     override def isDone: Boolean = true
 
     override def get(timeout: Long, unit: TimeUnit): A = get
+  }
+
+  case class Map2Future[A, B, C](af: Future[A], bf: Future[B], f: (A, B) => C) extends Future[C] {
+    override def cancel(mayInterruptIfRunning: Boolean): Boolean = false
+
+    override def isCancelled: Boolean = af.isCancelled || bf.isCancelled
+
+    override def isDone: Boolean = af.isDone && bf.isDone
+
+    override def get(timeout: Long, unit: TimeUnit): C = {
+      val timeBudget = unit.toNanos(timeout)
+      val t = System.nanoTime()
+      val a = af.get(timeout, unit)
+      val elapsed = System.nanoTime() - t
+      val remaining = timeBudget - elapsed
+      if (remaining <= 0) throw new TimeoutException(s"$remaining nanos left")
+      val b = bf.get(remaining, TimeUnit.NANOSECONDS)
+      f(a, b)
+    }
+
+    override def get(): C = get(Long.MaxValue, TimeUnit.MILLISECONDS)
   }
 
 }
