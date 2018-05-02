@@ -15,10 +15,15 @@ object Par {
       Map2Future(af, bf, f)
     }
 
+  def map[A, B](a: Par[A])(f: A => B): Par[B] =
+    map2(a, unit(()))((a, _) => f(a))
+
   def fork[A](a: => Par[A]): Par[A] =
     es => es.submit(() => a(es).get())
 
   def lazyUnit[A](a: => A): Par[A] = fork(unit(a))
+
+  def asyncF[A, B](f: A => B): A => Par[B] = a => lazyUnit(f(a))
 
   def run[A](s: ExecutorService)(a: Par[A]): Future[A] = a(s)
 
