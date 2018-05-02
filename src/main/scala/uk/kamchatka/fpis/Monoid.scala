@@ -20,6 +20,12 @@ object Monoid {
     override def op(a: Int, b: Int): Int = a * b
   }
 
+  val monoidMaxInt: Monoid[Int] = new Monoid[Int] {
+    override def zero: Int = Int.MinValue
+
+    override def op(a: Int, b: Int): Int = math.max(a, b)
+  }
+
   def functionMonoid[A, B](m: Monoid[B]): Monoid[A => B] = new Monoid[A => B] {
     override def zero: A => B = _ => m.zero
 

@@ -30,6 +30,22 @@ object Par {
       map2(a, acc)(_ :: _)
     }
 
+  def parFilter[A](as: List[A])(p: A => Boolean): Par[List[A]] = {
+    val filters = as.map(asyncF(Some(_).filter(p)))
+    val filtered = sequence(filters)
+    map(filtered)(_.flatten)
+  }
+
+  def parFoldMap[A, B: Monoid](as: IndexedSeq[A])(f: A => B): Par[B] = {
+    val m = implicitly[Monoid[B]]
+    if (as.length <= 1)
+      Par.unit(as.headOption map f getOrElse m.zero)
+    else {
+      val (l, r) = as.splitAt(as.length / 2)
+      Par.map2(Par.fork(parFoldMap(l)(f)), Par.fork(parFoldMap(r)(f)))(m.op)
+    }
+  }
+
   def run[A](s: ExecutorService)(a: Par[A]): Future[A] = a(s)
 
   case class UnitFuture[A](get: A) extends Future[A] {
