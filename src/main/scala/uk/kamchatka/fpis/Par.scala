@@ -25,6 +25,11 @@ object Par {
 
   def asyncF[A, B](f: A => B): A => Par[B] = a => lazyUnit(f(a))
 
+  def sequence[A](as: List[Par[A]]): Par[List[A]] =
+    as.foldRight(unit(List.empty[A])) { (a, acc) =>
+      map2(a, acc)(_ :: _)
+    }
+
   def run[A](s: ExecutorService)(a: Par[A]): Future[A] = a(s)
 
   case class UnitFuture[A](get: A) extends Future[A] {

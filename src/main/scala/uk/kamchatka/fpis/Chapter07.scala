@@ -15,4 +15,8 @@ object Chapter07 extends App {
   }
 
   println(sum(1 to 100)(Executors.newFixedThreadPool(1000)).get(125, TimeUnit.MILLISECONDS))
+  println(
+    Par.sequence {
+      (1 to 30).toList map Par.asyncF((x: Int) => x * x)
+    }(Executors.newFixedThreadPool(1000)).get(125, TimeUnit.MILLISECONDS))
 }
