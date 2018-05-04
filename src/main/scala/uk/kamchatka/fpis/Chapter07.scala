@@ -1,9 +1,10 @@
 package uk.kamchatka.fpis
 
-import java.util.concurrent.{ExecutorService, Executors, ThreadFactory, TimeUnit}
+import java.util.concurrent.{ExecutorService, Executors, ThreadFactory}
 
 import uk.kamchatka.fpis.Monoid._
-import uk.kamchatka.fpis.Par.{Par, parFoldMap}
+import uk.kamchatka.fpis.parallelism.Par
+import uk.kamchatka.fpis.parallelism.Par.{Par, parFoldMap}
 
 object Chapter07 extends App {
   def sum(ints: IndexedSeq[Int]): Par[Int] =
@@ -18,12 +19,12 @@ object Chapter07 extends App {
     t.setDaemon(true)
     t
   }
-  private val es: ExecutorService = Executors.newFixedThreadPool(1000, threadFactory)
+  private val es: ExecutorService = Executors.newFixedThreadPool(10, threadFactory)
 
-  println(sum(1 to 100)(es).get(125, TimeUnit.MILLISECONDS))
-  println(max(1 to 100)(es).get(125, TimeUnit.MILLISECONDS))
-  println(
+  println(Par.run(es)(sum(1 to 100)))
+  println(Par.run(es)(max(1 to 100)))
+  println(Par.run(es)(
     Par.sequence {
       (1 to 30).toList map Par.asyncF((x: Int) => x * x)
-    }(es).get(125, TimeUnit.MILLISECONDS))
+    }))
 }
