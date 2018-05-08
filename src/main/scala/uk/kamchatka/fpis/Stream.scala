@@ -21,6 +21,9 @@ sealed trait Stream[+A] {
   def filter(f: A => Boolean): Stream[A] =
     foldRight[Stream[A]](empty)((a, acc) => if (f(a)) cons(a, acc) else acc)
 
+  def find(p: A => Boolean): Option[A] =
+    filter(p).headOption
+
   def append[B >: A](b: => Stream[B]): Stream[B] =
     foldRight(b)(cons(_, _))
 
@@ -52,6 +55,9 @@ sealed trait Stream[+A] {
       case (Cons(ha, ta), Cons(hb, tb)) => Some((f(ha(), hb()), (ta(), tb())))
       case _ => None
     }
+
+  def zip[B, C](bs: Stream[B]): Stream[(A, B)] =
+    zipWith(bs)((_, _))
 
   def zipAll[B](bs: Stream[B]): Stream[(Option[A], Option[B])] =
     unfold((this, bs)) {

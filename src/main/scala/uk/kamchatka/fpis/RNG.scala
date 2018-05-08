@@ -25,16 +25,6 @@ trait RNG {
     both(double, both(double, double)).map {
       case (d0, (d1, d2)) => (d0, d1, d2)
     }.run(this)
-
-  def ints(n: Int): (List[Int], RNG) =
-    sequence(List.fill(n)(int)).run(this)
-
-  def nonNegativeLessThan(n: Int): Rand[Int] =
-    int flatMap { i =>
-      val mod = i % n
-      if (i + (n - 1) - mod >= 0) unit(mod)
-      else nonNegativeLessThan(n)
-    }
 }
 
 case class SimpleRNG(seed: Long) extends RNG {
@@ -48,6 +38,19 @@ case class SimpleRNG(seed: Long) extends RNG {
 
 object RNG {
   type Rand[A] = State[RNG, A]
+
+  def int: Rand[Int] = State(rng => rng.nextInt)
+
+  def boolean: Rand[Boolean] = int map (x => (x & 1) == 1)
+
+  def ints(n: Int): Rand[List[Int]] = sequence(List.fill(n)(int))
+
+  def nonNegativeLessThan(n: Int): Rand[Int] =
+    int flatMap { i =>
+      val mod = i % n
+      if (i + (n - 1) - mod >= 0) unit(mod)
+      else nonNegativeLessThan(n)
+    }
 
   def nonNegative(n: Int): Int = if (n >= 0) n else ~n
 
