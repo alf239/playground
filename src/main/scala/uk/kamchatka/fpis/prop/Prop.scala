@@ -7,9 +7,9 @@ import scala.util.control.NonFatal
 
 
 case class Prop(check: (SuccessCount, RNG) => Result) {
-  def &&(p: Prop): Prop = ???
+  def &&(p: Prop): Prop = Prop { (n, rng) => check(n, rng) && p.check(n, rng) }
 
-  def ||(p: Prop): Prop = ???
+  def ||(p: Prop): Prop = Prop { (n, rng) => check(n, rng) || p.check(n, rng) }
 }
 
 object Prop {
@@ -18,6 +18,10 @@ object Prop {
 
   sealed trait Result {
     def isFalsified: Boolean
+
+    def &&(b: => Result): Result = if (isFalsified) this else b
+
+    def ||(b: => Result): Result = if (!isFalsified) this else b
   }
 
   case object Passed extends Result {
