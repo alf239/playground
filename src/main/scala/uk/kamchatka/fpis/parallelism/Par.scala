@@ -8,6 +8,17 @@ import uk.kamchatka.fpis.Monoid
 import scala.concurrent.{ExecutionContext, Promise}
 
 object Par {
+  def flatMap[A, B](pa: Par[A])(f: A => Par[B]): Par[B] = es => new Future[B] {
+    override private[parallelism] def apply(cb: B => Unit): Unit = {
+      val ap = Promise[A]
+      pa(es)(a => ap.success(a))
+      implicit val ec: ExecutionContext = ExecutionContext.fromExecutorService(es)
+      for (a <- ap.future) {
+        f(a)(es)(cb)
+      }
+    }
+  }
+
 
   sealed trait Future[A] {
     private[parallelism] def apply(cb: A => Unit): Unit
