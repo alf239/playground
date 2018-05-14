@@ -44,10 +44,10 @@ object Free {
   }
 
   @tailrec
-  def step[F[_], A](fa: Free[F, A])(implicit m: Monad[F]): Free[F, A] = fa match {
+  def step[F[_], A](free: Free[F, A]): Free[F, A] = free match {
     case FlatMap(FlatMap(x, f), g) => step(x flatMap (a => f(a) flatMap g))
     case FlatMap(Return(x), f) => step(f(x))
-    case _ => fa
+    case _ => free
   }
 
   def runFree[F[_], G[_], A](free: Free[F, A])(t: F ~> G)
@@ -66,6 +66,6 @@ object Free {
       override def unit[A](a: A): Free[F, A] = Free.unit(a)
 
       def compose[A, B, C](f: A => Free[F, B],
-                           g: B => Free[F, C]): A => Free[F, C] = a => f(a).flatMap(g)
+                           g: B => Free[F, C]): A => Free[F, C] = a => f(a) flatMap g
     }
 }
